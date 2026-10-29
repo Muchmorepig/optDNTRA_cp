@@ -1,0 +1,9 @@
+name: optDNTRA-omark
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  - python=3.10
+  - omark=0.5.0
+  - cython

@@ -6,6 +6,7 @@ import workflow.optDNTRA_utils as utils
 import subprocess
 from time import time
 import os
+import shlex
 
 
 def parse_args() -> argparse.ArgumentParser:
@@ -170,7 +171,8 @@ def main() -> None:
         snakefile_path = os.path.join(script_dir, "workflow", "Snakefile")
         # Always prepend the correct snakemake --snakefile path to the options
         # If user provided additional snakemake options, append them; otherwise, only use the default
-        args.snakemakeOptions = [f"snakemake --snakefile {snakefile_path}"] + [args.snakemakeOptions] if args.snakemakeOptions else [f"snakemake --snakefile {snakefile_path}"]
+        extra_options = shlex.split(args.snakemakeOptions or "")
+        args.snakemakeOptions = ["snakemake", "--snakefile", snakefile_path, "all"] + extra_options
         # Load workflow configuration (defaults.yml and command-line args)
         config_default = utils.load_defaults(args, LOG_MAIN)
         # Validate all arguments and configuration
@@ -181,7 +183,12 @@ def main() -> None:
         snakemake_cmd = utils.update_snakemakeOptions(args, LOG_MAIN)
         # Run the Snakemake workflow
         LOG_MAIN.info("Running Snakemake...")
-        subprocess.run(snakemake_cmd, shell=True, check=True)
+        env = os.environ.copy()
+        env["PYTHONPATH"] = os.path.join(script_dir, "workflow") + os.pathsep + env.get("PYTHONPATH", "")
+        # Keep personal R libraries from shadowing the environment's edgeR.
+        env["R_PROFILE_USER"] = os.devnull
+        env["R_ENVIRON_USER"] = os.devnull
+        subprocess.run(snakemake_cmd, env=env, check=True)
         # Log total runtime
         main_end_time = time()
         elapse_time = main_end_time - main_start_time

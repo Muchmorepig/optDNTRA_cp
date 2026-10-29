@@ -1,0 +1,86 @@
+#!/usr/bin/env python3
+"""Translate Trinity's removed Salmon option without changing installed tools.
+
+Salmon 2 removed --minAssignedFrags. Preserve Trinity's threshold (=1) by
+checking the resulting quant.sf, and fail on zero assigned fragments.
+All other options and Salmon 1 invocations are passed through unchanged.
+"""
+import csv
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+import tempfile
+
+
+def adapt_args(args, major):
+    args = list(args)
+    threshold = None
+    if major >= 2 and "--minAssignedFrags" in args:
+        i = args.index("--minAssignedFrags")
+        if i + 1 == len(args):
+            raise ValueError("--minAssignedFrags requires a value")
+        threshold = int(args[i + 1])
+        if threshold != 1:
+            raise ValueError("Only Trinity's --minAssignedFrags 1 is supported")
+        del args[i:i + 2]
+    return args, threshold
+
+
+def fasta_to_fastq(source, target):
+    """Streaming conversion of Trinity's internal FASTA; qualities are placeholders."""
+    with open(source) as inp, open(target, "w") as out:
+        name, seq = None, []
+        def emit():
+            if name is not None:
+                dna = "".join(seq)
+                if not dna:
+                    raise ValueError("Empty FASTA record: " + name)
+                out.write(f"@{name}\n{dna}\n+\n{'I' * len(dna)}\n")
+        for line in inp:
+            if line.startswith(">"):
+                emit()
+                name, seq = line[1:].strip(), []
+            else:
+                if name is None and line.strip():
+                    raise ValueError("Sequence before FASTA header")
+                seq.append(line.strip())
+        emit()
+
+
+def main():
+    real = os.environ.get("OPTDNTRA_REAL_SALMON")
+    if not real or Path(real).resolve() == Path(__file__).resolve():
+        sys.exit("Use scripts/run_trinity.py to configure the real Salmon executable.")
+    version = subprocess.check_output([real, "--version"], text=True)
+    match = re.search(r"salmon\s+(\d+)\.", version)
+    if not match:
+        sys.exit("Cannot determine Salmon version: " + version)
+    major = int(match.group(1))
+    args, threshold = adapt_args(sys.argv[1:], major)
+    # Salmon 2 reads mode accepts FASTQ, whereas Trinity supplies both.fa.
+    # Convert one record at a time; do not alter the original reads.
+    with tempfile.TemporaryDirectory(prefix="optdntra-salmon-") as tmp:
+        if major >= 2 and threshold is not None and "-r" in args:
+            i = args.index("-r") + 1
+            with open(args[i]) as source:
+                is_fasta = source.read(1) == ">"
+            if is_fasta:
+                converted = str(Path(tmp) / "reads.fastq")
+                fasta_to_fastq(args[i], converted)
+                args[i] = converted
+        code = subprocess.call([real, *args])
+    if code:
+        sys.exit(code)
+    if threshold is not None:
+        flag = "-o" if "-o" in args else "--output"
+        output = Path(args[args.index(flag) + 1]) / "quant.sf"
+        with output.open() as handle:
+            assigned = sum(float(row["NumReads"]) for row in csv.DictReader(handle, delimiter="\t"))
+        if assigned < threshold:
+            sys.exit("Salmon assigned fewer than one fragment; refusing empty Trinity quantification.")
+
+
+if __name__ == "__main__":
+    main()

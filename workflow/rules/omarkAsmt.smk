@@ -8,6 +8,10 @@ from time import time
 OMARK_DB = config["omark_database"]
 
 
+OMAMER_CMD = utils.tool_command(config, "omark_env", "omamer")
+
+OMARK_CMD = utils.tool_command(config, "omark_env", "omark")
+
 ### Logging Setup ### ----------------------------------------
 LOG_OMARKASMT = utils.get_logger("OMARKASMT", VERBOSE)
 
@@ -40,7 +44,7 @@ rule omark_assessment:
          --nthreads {threads} \
          &> {log}
 
-        omark \
+        {OMARK_CMD} \
          --file {params.omarkQuery} \
          --database {params.omarkDB} \
          --outputFolder {output.omarkOut} \

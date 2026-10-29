@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+.snakemake/
+optDNTRA.config.yml
+optDNTRA_out/
+.test-runs/
+# Legacy fixtures are retained locally but not included in future checkouts.
+test_data/*.fq.gz
+test_data/*.fasta

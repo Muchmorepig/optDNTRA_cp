@@ -6,7 +6,7 @@
 
 # Paired-end read file extensions (e.g., "_1", "_2" for forward and reverse reads)
 # Example: ["_R1", "_R2"]
-reads:
+reads: ["_R1", "_R2"]
 
 # Swiss-Prot database for TransDecoder.Predict.
 # If not provided, the workflow will automatically download the latest version from:
@@ -28,6 +28,12 @@ busco_lineage:
 omark_database:
 
 # EggNOG-mapper database path.
-# If not specified, the workflow will download the latest version from:
-# http://eggnog6.embl.de/download/emapperdb-5.0.2/eggnog.db.gz
+# Download the complete matching database with download_eggnog_data.py in
+# optDNTRA-eggnog first, then set the path to eggnog.db here.
 emapper_database:
+
+# Isolated environments: use a name, an absolute prefix, or empty for current PATH.
+trinity_env: optDNTRA-trinity
+busco_env: optDNTRA-busco
+omark_env: optDNTRA-omark
+emapper_env: optDNTRA-eggnog

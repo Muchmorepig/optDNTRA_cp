@@ -1,0 +1,27 @@
+[
+  {
+    "environment": "core",
+    "pip_check_exit_code": 0,
+    "pip_check": "No broken requirements found."
+  },
+  {
+    "environment": "trinity",
+    "pip_check_exit_code": 0,
+    "pip_check": "No broken requirements found."
+  },
+  {
+    "environment": "busco",
+    "pip_check_exit_code": 0,
+    "pip_check": "No broken requirements found."
+  },
+  {
+    "environment": "omark",
+    "pip_check_exit_code": 0,
+    "pip_check": "No broken requirements found."
+  },
+  {
+    "environment": "eggnog",
+    "pip_check_exit_code": 0,
+    "pip_check": "No broken requirements found."
+  }
+]

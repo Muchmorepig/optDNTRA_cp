@@ -13,6 +13,8 @@ import shutil
 from coloredlogs import ColoredFormatter
 from Bio import SeqIO
 import argparse
+import shlex
+from pathlib import Path
 
 # Valid file extensions for different file types
 fastaExt = ["fa", "fasta"]
@@ -117,12 +119,11 @@ def check_extensions(file_name: str, ext_list: list[str], logger: logging.Logger
         OptDNTRAError: If the file does not exist or has an invalid extension.
     """
     _, basename = os.path.split(file_name)
-    file_extension = basename.split('.', 1)[1] if '.' in basename else ''
     logger.debug(f"Checking the file extension of {file_name}...")
     if not os.path.exists(file_name):
         logger.error(f"Error! Input file {file_name} not found")
         raise OptDNTRAError(f"Input file {file_name} not found")
-    if file_extension not in ext_list:
+    if not any(basename.endswith('.' + ext) for ext in ext_list):
         logger.error(f"Error! {file_name} has an invalid extension")
         raise OptDNTRAError(f"{file_name} has an invalid extension")
 
@@ -224,6 +225,12 @@ def check_arguments(args: argparse.Namespace, config: dict, logger: logging.Logg
         OptDNTRAError: If argument validation fails or required files are missing.
     """
     logger.info("Checking the wrapper arguments...")
+    if args.threads < 1:
+        raise OptDNTRAError("threads must be a positive integer")
+    if not isinstance(config.get("reads"), list) or len(config["reads"]) != 2 or not all(config["reads"]):
+        raise OptDNTRAError("Set reads to two nonempty mate suffixes, e.g. ['_R1', '_R2']")
+    if args.busco and not config.get("busco_lineage"):
+        raise OptDNTRAError("--buscoAsmt requires a busco_lineage in the config")
     # Check transcript file
     check_extensions(args.transcript, fastaExt, logger)
     # Check input FASTQ/FASTA logic
@@ -276,12 +283,15 @@ def check_arguments(args: argparse.Namespace, config: dict, logger: logging.Logg
             omark_db_path = os.path.splitext(os.path.basename(omark_db_url))[0] if omark_db_url.endswith(".gz") else os.path.basename(omark_db_url)
             config["omark_database"] = f"data/{omark_db_path}"
     if args.emapper:
-        if config["emapper_database"]:
-            check_extensions(config["emapper_database"], emapperDbExt, logger)
-        else:
-            download_file(url=emapper_db_url, out_dir="data/", logger=logger)
-            emapper_db_path = os.path.splitext(os.path.basename(emapper_db_url))[0] if emapper_db_url.endswith(".gz") else os.path.basename(emapper_db_url)
-            config["emapper_database"] = f"data/{emapper_db_path}"
+        # One SQLite file is not a complete eggNOG database. Use its official
+        # downloader in the isolated environment and explicitly select the data.
+        if not config.get("emapper_database"):
+            raise OptDNTRAError("Set emapper_database to eggnog.db after running download_eggnog_data.py in the eggNOG environment")
+        check_extensions(config["emapper_database"], ["db"], logger)
+        data_dir = Path(config["emapper_database"]).parent
+        missing = [name for name in ["eggnog.taxa.db", "eggnog_proteins.dmnd"] if not (data_dir / name).is_file()]
+        if missing:
+            raise OptDNTRAError("Incomplete eggNOG database: missing " + ", ".join(missing))
 
 
 def add_sampleConfig(config: dict, logger: logging.Logger) -> dict:
@@ -380,7 +390,7 @@ def count_fastx(fastx: str, logger: logging.Logger, identifier: str = ">") -> in
     return seq_count
 
 
-def update_snakemakeOptions(args: argparse.Namespace, logger: logging.Logger) -> str:
+def update_snakemakeOptions(args: argparse.Namespace, logger: logging.Logger) -> list[str]:
     """
     Update the Snakemake options with additional parameters for execution.
 
@@ -389,16 +399,42 @@ def update_snakemakeOptions(args: argparse.Namespace, logger: logging.Logger) ->
         logger (logging.Logger): Logger for status messages.
 
     Returns:
-        str: A string of snakemake options with '--quiet' and '--cores' parameters added.
+        list[str]: Argument vector with the requested core count.
     """
-    # Add --cores and --quiet (if not verbose) to the snakemake command
-    if args.verbose:
-        snakemake_cmd = args.snakemakeOptions + [f"--cores {args.threads}"]
-    else:
-        snakemake_cmd = args.snakemakeOptions + ["--quiet all", f"--cores {args.threads}"]
-    snakemake_cmd = " ".join(" ".join(snakemake_cmd).split())
-    logger.info(f"Snakemake options: {snakemake_cmd}")
+    # Do not pass this vector through a shell or split quoted paths again.
+    snakemake_cmd = args.snakemakeOptions + ["--cores", str(args.threads)]
+    logger.info(f"Snakemake options: {shlex.join(snakemake_cmd)}")
     return snakemake_cmd
+
+
+def tool_command(config, env_key, executable):
+    """Run an optional module in its isolated environment (name or prefix)."""
+    environment = config.get(env_key, "")
+    if not environment:
+        return shlex.quote(executable)
+    selector = "-p" if os.path.isabs(environment) else "-n"
+    return shlex.join(["mamba", "run", selector, environment, executable])
+
+
+def fastq_extension(path):
+    for ext in sorted(fastqExt, key=len, reverse=True):
+        if str(path).endswith('.' + ext):
+            return '.' + ext
+    raise OptDNTRAError(f"Unsupported FASTQ suffix: {path}")
+
+
+def transdecoder_command(phase):
+    """Locate phase programs in both TransDecoder 5 and 6 installations."""
+    name = "TransDecoder." + phase
+    executable = shutil.which(name)
+    if executable:
+        return shlex.quote(executable)
+    wrapper = shutil.which("TransDecoder")
+    if wrapper:
+        candidate = Path(wrapper).resolve().parent / "util" / name
+        if candidate.is_file():
+            return shlex.quote(str(candidate))
+    raise OptDNTRAError(f"Cannot find {name}; activate the core environment")
 
 
 def process_path(path: str, new_dir: str) -> str:

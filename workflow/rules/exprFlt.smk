@@ -6,6 +6,12 @@ from time import time
 import pandas as pd
 import shutil
 
+ALIGN_CMD = utils.tool_command(config, "trinity_env", "align_and_estimate_abundance.pl")
+
+MATRIX_CMD = utils.tool_command(config, "trinity_env", "abundance_estimates_to_matrix.pl")
+
+FILTER_CMD = utils.tool_command(config, "trinity_env", "filter_low_expr_transcripts.pl")
+
 ### Logging Setup ### ----------------------------------------
 LOG_EXPRFLT = utils.get_logger("EXPRFLT", VERBOSE)
 
@@ -45,7 +51,7 @@ if BATCH:
 
             shell(
             f"""
-            align_and_estimate_abundance.pl \
+            {ALIGN_CMD} \
              --transcripts {input.transcript} \
              --seqType fq \
              --samples_file {input.batch} \
@@ -108,7 +114,7 @@ if BATCH:
 
             shell(
             """
-            abundance_estimates_to_matrix.pl \
+            {MATRIX_CMD} \
              --est_method RSEM \
              --gene_trans_map none \
              --name_sample_by_basedir \
@@ -169,7 +175,7 @@ if BATCH:
 
             shell(
             """
-            filter_low_expr_transcripts.pl \
+            {FILTER_CMD} \
              --matrix {input.RSEMIsoTPM} \
              --transcripts {input.transcript1} \
              --min_expr_any 1 \
@@ -229,7 +235,7 @@ else:
 
                 shell(
                 f"""
-                align_and_estimate_abundance.pl \
+                {ALIGN_CMD} \
                  --transcripts {input.transcript} \
                  --seqType fq \
                  --left {input.fqLeft} \
@@ -278,7 +284,7 @@ else:
 
                 shell(
                 """
-                abundance_estimates_to_matrix.pl \
+                {MATRIX_CMD} \
                  --est_method RSEM \
                  --gene_trans_map none \
                  --out_prefix {params.RSEMprefix} \
@@ -342,7 +348,7 @@ else:
 
                 shell(
                 """
-                filter_low_expr_transcripts.pl \
+                {FILTER_CMD} \
                  --matrix {input.RSEMIsoTPM} \
                  --transcripts {input.transcript1} \
                  --min_expr_any 1 \
@@ -400,7 +406,7 @@ else:
 
                 shell(
                 f"""
-                align_and_estimate_abundance.pl \
+                {ALIGN_CMD} \
                  --transcripts {input.transcript} \
                  --seqType fq \
                  --single {input.fastq} \
@@ -448,7 +454,7 @@ else:
 
                 shell(
                 """
-                abundance_estimates_to_matrix.pl \
+                {MATRIX_CMD} \
                  --est_method RSEM \
                  --gene_trans_map none \
                  --out_prefix {params.RSEMprefix} \
@@ -512,7 +518,7 @@ else:
 
                 shell(
                 """
-                filter_low_expr_transcripts.pl \
+                {FILTER_CMD} \
                  --matrix {input.RSEMIsoTPM} \
                  --transcripts {input.transcript1} \
                  --min_expr_any 1 \

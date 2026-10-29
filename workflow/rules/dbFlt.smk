@@ -19,6 +19,7 @@ rule filter_based_on_database:
     """
     input:
         swissProt=SWISSPROT,
+        swissIndex=rules.blastp_search.output.swissIndex,
         transcript=join(TRANSEVID_DIR, "transcript.noBlast1.fasta"),
         transcriptFltNoBlastID=join(TRANSEVID_DIR, "transcriptFlt.noBlast.id.txt"),
     output:
@@ -38,7 +39,7 @@ rule filter_based_on_database:
         shell(
         """
         diamond blastx \
-         --db {input.swissProt} \
+         --db {input.swissIndex} \
          --query {input.transcript} \
          --out {output.swissprotBlastxOut} \
          --evalue 1e-5 \

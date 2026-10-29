@@ -1,0 +1,42 @@
+name: Core workflow regression
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          activate-environment: optDNTRA
+          environment-file: environment.yml
+          use-mamba: true
+      - name: Create isolated Trinity and RSEM environment
+        run: mamba env create -f envs/trinity.yml -y
+      - name: Dependency metadata checks
+        run: |
+          python -m pip check
+          mamba run -n optDNTRA-trinity python -m pip check
+      - name: Regression tests
+        run: python -B -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Full core smoke test (preassembled synthetic input)
+        run: python -B tests/smoke.py --workdir .test-runs/core --threads 2 --preprocess
+      - name: Tiny Trinity and Salmon 2 integration test
+        run: python -B tests/trinity_smoke.py --workdir .test-runs/trinity
+      - name: Single-end regression
+        run: python -B tests/smoke.py --workdir .test-runs/single --threads 2 --single-end
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-results
+          include-hidden-files: true
+          path: |
+            .test-runs/**/validation.json
+            .test-runs/**/*.log

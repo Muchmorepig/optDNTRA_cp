@@ -1,0 +1,12 @@
+name: optDNTRA-eggnog
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  - python=3.8
+  - eggnog-mapper=2.1.15
+  # Upstream Python metadata still pins these exact versions.
+  - biopython=1.76
+  - psutil=5.7.0
+  - xlsxwriter=1.4.3

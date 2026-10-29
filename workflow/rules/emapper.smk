@@ -9,6 +9,8 @@ from time import time
 EMAPPER_DB = dirname(config["emapper_database"])
 
 
+EMAPPER_CMD = utils.tool_command(config, "emapper_env", "emapper.py")
+
 ### Logging Setup ### ----------------------------------------
 LOG_EMAPPER = utils.get_logger("EMAPPER", VERBOSE)
 
@@ -35,7 +37,7 @@ rule emapper:
 
         shell(
         """
-        emapper.py \
+        {EMAPPER_CMD} \
          -m diamond \
          --itype proteins \
          -i {input.transcriptPep} \

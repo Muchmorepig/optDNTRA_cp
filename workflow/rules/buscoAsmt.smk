@@ -8,6 +8,8 @@ from time import time
 TRANSCRIPTPREFLT = config["transcript"]
 
 
+BUSCO_CMD = utils.tool_command(config, "busco_env", "busco")
+
 ### Logging Setup ### ----------------------------------------
 LOG_BUSCOASMT = utils.get_logger("BUSCOASMT", VERBOSE)
 
@@ -41,7 +43,7 @@ checkpoint busco_assessment:
 
         shell(
         """
-        busco \
+        {BUSCO_CMD} \
          --in {input.transcriptPreFlt} \
          --out {params.buscoPreFlt} \
          --mode transcriptome \
@@ -53,7 +55,7 @@ checkpoint busco_assessment:
          --quiet \
          &> {log}
 
-        busco \
+        {BUSCO_CMD} \
          --in {input.transcriptPostFlt} \
          --out {params.buscoPostFlt} \
          --mode transcriptome \
@@ -80,11 +82,11 @@ def get_busco_summary(wildcards):
     checkpointOut = [
         join(
             buscoPreFlt,
-            f"short_summary.specific.{BUSCO_LINEAGE}.busco_{BUSCO_LINEAGE}_preFlt.txt",
+            f"short_summary.specific.{BUSCO_LINEAGE}.busco_{BUSCO_LINEAGE}_preFlt.json",
         ),
         join(
             buscoPostFlt,
-            f"short_summary.specific.{BUSCO_LINEAGE}.busco_{BUSCO_LINEAGE}_postFlt.txt",
+            f"short_summary.specific.{BUSCO_LINEAGE}.busco_{BUSCO_LINEAGE}_postFlt.json",
         ),
     ]
     return checkpointOut
@@ -102,7 +104,7 @@ rule generate_plot:
         join(ASMT_LOG_DIR, "buscoAsmt-generate_plot.log"),
     params:
         buscoDir=directory(join(BUSCO_DIR, BUSCO_LINEAGE)),
-        plotScript="generate_plot.py",
+        plotScript=BUSCO_CMD,
     threads: THREADS
     run:
         shell(
@@ -110,9 +112,9 @@ rule generate_plot:
         cp {input.buscoSummary[0]} {params.buscoDir} &> {log}
         cp {input.buscoSummary[1]} {params.buscoDir} &>> {log}
         {params.plotScript} \
-         --working_directory {params.buscoDir} \
+         --plot {params.buscoDir} \
          --quiet \
          &>> {log}
-        touch {output.buscoFig}
+        test -s {output.buscoFig}
         """
         )

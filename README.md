@@ -8,17 +8,87 @@
 
 ## Installation
 
-To install the required dependencies for `optDNTRA`, we recommend using [Mamba](https://github.com/mamba-org/mamba), a fast and robust package manager that serves as a drop-in replacement for Conda. Mamba significantly accelerates the installation process and handles complex dependency resolution more efficiently.
-
-To set up `optDNTRA`, first ensure you have Mamba installed. Then, clone the repository and create an environment as follows:
+The 2026-10-29 refresh uses current stable Bioconda tools with isolated modules
+where their dependencies conflict. See [versions and compatibility](docs/UPGRADE.md).
+Create new environments instead of updating an old mixed conda/pip environment.
 
 ```bash
-git clone https://github.com/zywu2002/optDNTRA.git
-cd optDNTRA
+git clone --depth 1 https://github.com/Muchmorepig/optDNTRA_cp.git
+cd optDNTRA_cp
 mamba env create -f environment.yml
+mamba env create -f envs/trinity.yml
+# Optional, only for the corresponding assessment/annotation flags:
+mamba env create -f envs/busco.yml
+mamba env create -f envs/omark.yml
+mamba env create -f envs/eggnog.yml
 mamba activate optDNTRA
-export PATH=/path/to/optDNTRA/directory:$PATH
+export PATH="$PWD:$PATH"
 ```
+
+Use `-n optDNTRA-modern` when creating the core if an old `optDNTRA` already
+exists, and activate that name instead. `defaults.yml` selects the isolated module
+environments. Set `trinity_env`, `busco_env`, `omark_env`, or `emapper_env` to an
+environment name or absolute prefix; an empty value uses the current PATH.
+Trinity's helper scripts are needed for RSEM quantification even with a
+preassembled transcriptome. The core and Trinity environments are therefore
+required; full Trinity assembly itself is optional.
+
+For exact Linux reproduction, use the explicit locks instead of solving YAML:
+
+```bash
+mamba create -n optDNTRA --file envs/locks/linux-64/core.txt
+mamba create -n optDNTRA-trinity --file envs/locks/linux-64/trinity.txt
+```
+
+The other module locks are in the same directory. These locks target Linux x86-64.
+
+## Quick test (no large data or assembly)
+
+```bash
+python -B -m unittest discover -s tests -p 'test_*.py' -v
+python -B tests/smoke.py --workdir .test-runs/core --threads 2
+# Optional tiny Trinity / Salmon 2 test (3 transcripts, 78 read pairs):
+python -B tests/trinity_smoke.py --workdir .test-runs/trinity
+```
+
+The core test generates 600 synthetic transcripts plus 15,600 read pairs and
+small synthetic references on demand. It runs actual tools and checks final
+transcript/protein IDs. No biological accuracy claim follows from this test.
+See [test details](test_data/README.md).
+
+## Optional de novo assembly
+
+For real raw reads, first assemble with the compatibility wrapper. Use a new
+output directory when changing Salmon versions:
+
+```bash
+mamba run -n optDNTRA-trinity python scripts/run_trinity.py \
+  --seqType fq --left reads_R1.fastq.gz --right reads_R2.fastq.gz \
+  --CPU 8 --max_memory 20G --output trinity_run
+# Final assembly: trinity_run.Trinity.fasta
+```
+
+`--max_memory` is a Trinity parameter, not a scheduler-enforced memory limit.
+The wrapper supports Salmon 2's removed option and FASTQ-only reads interface;
+calling upstream `Trinity` directly bypasses this compatibility handling.
+
+## Databases
+
+Set `swiss_prot` to a protein FASTA and `pfam_hmm` to Pfam-A.hmm in your config.
+DIAMOND indexes are written inside the output directory. BUSCO needs an explicit
+`busco_lineage`; OMArk needs a compatible OMAmer HDF5 database. These databases
+are independent of installing software environments.
+
+For optional eggNOG annotation, download the complete database with the matching
+stable tool and point `emapper_database` to its `eggnog.db`:
+
+```bash
+mamba run -n optDNTRA-eggnog download_eggnog_data.py --help
+# Choose a database directory and download the DIAMOND + taxonomy data as well.
+```
+
+Large production databases are not downloaded by the quick tests. Run each
+workflow in its own working directory: the CLI writes `optDNTRA.config.yml` there.
 
 ## Usage
 

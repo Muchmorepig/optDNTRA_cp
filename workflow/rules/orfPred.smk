@@ -11,11 +11,15 @@ SWISSPROT = config["swiss_prot"]
 
 # Pfam search
 PFAMHMM = config["pfam_hmm"]
+SWISSPROT_INDEX = join(ORFPREDICT_DIR, "swissprot.dmnd")
 
 
 ### Logging Setup ### ----------------------------------------
 LOG_ORFPRED = utils.get_logger("ORFPRED", VERBOSE)
 
+
+LONGORFS_CMD = utils.transdecoder_command("LongOrfs")
+PREDICT_CMD = utils.transdecoder_command("Predict")
 
 ### Rule ### ----------------------------------------
 if SSLIBTYPE:
@@ -44,7 +48,7 @@ if SSLIBTYPE:
 
             shell(
             """
-            TransDecoder.LongOrfs \
+            {LONGORFS_CMD} \
              -t {input.transcript} \
              -S \
              --output_dir {params.outDir} \
@@ -84,7 +88,7 @@ else:
 
             shell(
             """
-            TransDecoder.LongOrfs \
+            {LONGORFS_CMD} \
              -t {input.transcript} \
              --output_dir {params.outDir} \
              &> {log}
@@ -112,6 +116,7 @@ rule blastp_search:
         longestOrfs=get_longestORFs_pep,
     output:
         blastpOut=join(ORFPREDICT_DIR, "transcript.flt1.blastp.outfmt6"),
+        swissIndex=SWISSPROT_INDEX,
     log:
         join(OPTIM_LOG_DIR, "orfPred-blastp_search.log"),
     threads: THREADS
@@ -122,12 +127,12 @@ rule blastp_search:
         """
         diamond makedb \
          --in {input.swissProt} \
-         --db {input.swissProt} \
+         --db {output.swissIndex} \
          --threads {threads} \
          &> {log}
 
         diamond blastp \
-         --db {input.swissProt} \
+         --db {output.swissIndex} \
          --query {input.longestOrfs} \
          --out {output.blastpOut} \
          --evalue 1e-5 \
@@ -201,7 +206,7 @@ checkpoint transdecoder_predict:
 
         shell(
         """
-        TransDecoder.Predict \
+        {PREDICT_CMD} \
          -t {input.transcript} \
          --output_dir {params.outDir} \
          --retain_pfam_hits {input.pfamOut} \

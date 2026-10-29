@@ -38,13 +38,13 @@ if BATCH:
 
 # extension
 if FASTQ:
-    FASTQ_EXT = splitext(FASTQ)[1]
+    FASTQ_EXT = utils.fastq_extension(FASTQ)
 if FASTQ_LEFT and FASTQ_RIGHT and PAIREDEND:
-    assert splitext(FASTQ_LEFT)[1] == splitext(FASTQ_RIGHT)[1]
-    FASTQ_EXT = splitext(FASTQ_LEFT)[1]
+    assert utils.fastq_extension(FASTQ_LEFT) == utils.fastq_extension(FASTQ_RIGHT)
+    FASTQ_EXT = utils.fastq_extension(FASTQ_LEFT)
 if BATCH:
     samplesDict = utils.load_sampleSheet(BATCH, config, PAIREDEND)
-    ext_set = {"." + ".".join(f.split(".")[1:]) for v in samplesDict.values() for f in v}
+    ext_set = {utils.fastq_extension(f) for v in samplesDict.values() for f in v}
     assert len(ext_set) == 1
     FASTQ_EXT = next(iter(ext_set))
 

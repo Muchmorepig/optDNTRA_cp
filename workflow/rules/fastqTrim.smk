@@ -326,6 +326,7 @@ else:
                 threads: THREADS
                 run:
                     LOG_FQTRIM.info("Running fastqTrim.smk...")
+                    startTime = time()
 
                     makedirs(PREPROC_DIR, exist_ok=True)
 
