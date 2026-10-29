@@ -1,0 +1,74 @@
+{
+  "audit_date": "2026-10-29",
+  "platform": "linux-64",
+  "tests": [
+    {
+      "name": "synthetic_core",
+      "synthetic": true,
+      "seed": 20261029,
+      "transcripts": 600,
+      "read_pairs": 15600,
+      "passed": true,
+      "final_transcripts": 600,
+      "seconds": 56.5
+    },
+    {
+      "name": "synthetic_core_with_fastp_fastqc",
+      "synthetic": true,
+      "seed": 20261029,
+      "transcripts": 600,
+      "read_pairs": 15600,
+      "passed": true,
+      "final_transcripts": 600,
+      "seconds": 62.96
+    },
+    {
+      "name": "tiny_trinity_salmon2",
+      "synthetic": true,
+      "seed": 20261029,
+      "transcripts": 3,
+      "read_pairs": 78,
+      "passed": true,
+      "assembled_transcripts": 3,
+      "seconds": 15.76
+    },
+    {
+      "name": "synthetic_single_end",
+      "synthetic": true,
+      "seed": 20261029,
+      "transcripts": 600,
+      "read_pairs": 15600,
+      "passed": true,
+      "final_transcripts": 600,
+      "seconds": 55.5
+    },
+    {
+      "name": "python_regressions",
+      "passed": true,
+      "test_count": 6
+    },
+    {
+      "name": "all_optional_modules_dry_run",
+      "passed": true,
+      "jobs": 19,
+      "database_backed_annotation": false
+    },
+    {
+      "name": "busco6_plot_synthetic_summary",
+      "passed": true,
+      "png_bytes": 118436,
+      "biological_result": false
+    },
+    {
+      "name": "real_Ceratopteris_subset_core",
+      "passed": true,
+      "input_transcripts": 600,
+      "cdhit_transcripts": 566,
+      "orf_transcripts": 549,
+      "final_transcripts": 549,
+      "seconds": 408.6,
+      "reads": "previously filtered million-pair subset",
+      "databases": "local Swiss-Prot and Pfam; no optional annotation modules"
+    }
+  ]
+}

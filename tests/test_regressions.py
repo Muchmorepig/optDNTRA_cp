@@ -60,6 +60,10 @@ class RegressionTests(unittest.TestCase):
             adapter.fasta_to_fastq(src, dst)
             self.assertEqual(dst.read_text(), "@a/1\nACGTAC\n+\nIIIIII\n@b/2\nNNGT\n+\nIIII\n")
 
+    def test_current_tool_environment(self):
+        for value in (None, ""):
+            self.assertEqual(utils.tool_command({"trinity_env": value}, "trinity_env", "Trinity"), "Trinity")
+
     def test_isolated_tool_environment(self):
         self.assertEqual(utils.tool_command({"trinity_env": "optDNTRA-trinity"}, "trinity_env", "Trinity"),
                          "mamba run -n optDNTRA-trinity Trinity")

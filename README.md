@@ -8,46 +8,43 @@
 
 ## Installation
 
-The 2026-10-29 refresh uses current stable Bioconda tools with isolated modules
-where their dependencies conflict. See [versions and compatibility](docs/UPGRADE.md).
-Create new environments instead of updating an old mixed conda/pip environment.
+The recommended installation prioritizes compatibility and reproducibility over
+newest versions. **One environment** contains the core, Trinity/RSEM, BUSCO and
+OMArk. Only eggNOG annotation needs a second, optional environment.
+See [versions and compatibility](docs/UPGRADE.md).
 
 ```bash
 git clone --depth 1 https://github.com/Muchmorepig/optDNTRA_cp.git
 cd optDNTRA_cp
 mamba env create -f environment.yml
-mamba env create -f envs/trinity.yml
-# Optional, only for the corresponding assessment/annotation flags:
-mamba env create -f envs/busco.yml
-mamba env create -f envs/omark.yml
-mamba env create -f envs/eggnog.yml
-mamba activate optDNTRA
+mamba activate optDNTRA-stable
 export PATH="$PWD:$PATH"
+# Only if using --emapperAnno:
+mamba env create -f envs/eggnog.yml
 ```
 
-Use `-n optDNTRA-modern` when creating the core if an old `optDNTRA` already
-exists, and activate that name instead. `defaults.yml` selects the isolated module
-environments. Set `trinity_env`, `busco_env`, `omark_env`, or `emapper_env` to an
-environment name or absolute prefix; an empty value uses the current PATH.
-Trinity's helper scripts are needed for RSEM quantification even with a
-preassembled transcriptome. The core and Trinity environments are therefore
-required; full Trinity assembly itself is optional.
+The distinct name preserves existing installations. Defaults use the active
+environment for Trinity, BUSCO and OMArk. Existing configurations with explicit
+`trinity_env`, `busco_env` or `omark_env` values should set those values to `""`
+to use the unified environment. Named environments and absolute prefixes remain
+supported. No installed environments are removed automatically.
 
-For exact Linux reproduction, use the explicit locks instead of solving YAML:
+For exact reproduction on compatible Linux x86-64-v4 hardware, use the explicit
+lock below. It records this server's CPU-specific builds; on other CPUs use the
+YAML so Mamba selects suitable builds:
 
 ```bash
-mamba create -n optDNTRA --file envs/locks/linux-64/core.txt
-mamba create -n optDNTRA-trinity --file envs/locks/linux-64/trinity.txt
+mamba create -n optDNTRA-stable --file envs/locks/linux-64/core.txt
+# Optional annotation environment:
+mamba create -n optDNTRA-eggnog --file envs/locks/linux-64/eggnog.txt
 ```
-
-The other module locks are in the same directory. These locks target Linux x86-64.
 
 ## Quick test (no large data or assembly)
 
 ```bash
 python -B -m unittest discover -s tests -p 'test_*.py' -v
 python -B tests/smoke.py --workdir .test-runs/core --threads 2
-# Optional tiny Trinity / Salmon 2 test (3 transcripts, 78 read pairs):
+# Optional tiny Trinity test (3 transcripts, 78 read pairs):
 python -B tests/trinity_smoke.py --workdir .test-runs/trinity
 ```
 
@@ -62,15 +59,15 @@ For real raw reads, first assemble with the compatibility wrapper. Use a new
 output directory when changing Salmon versions:
 
 ```bash
-mamba run -n optDNTRA-trinity python scripts/run_trinity.py \
+python scripts/run_trinity.py \
   --seqType fq --left reads_R1.fastq.gz --right reads_R2.fastq.gz \
   --CPU 8 --max_memory 20G --output trinity_run
 # Final assembly: trinity_run.Trinity.fasta
 ```
 
 `--max_memory` is a Trinity parameter, not a scheduler-enforced memory limit.
-The wrapper supports Salmon 2's removed option and FASTQ-only reads interface;
-calling upstream `Trinity` directly bypasses this compatibility handling.
+The recommended environment uses Salmon 1.10.3, compatible with Trinity.
+The wrapper also retains Salmon 2 compatibility for existing custom installations.
 
 ## Databases
 

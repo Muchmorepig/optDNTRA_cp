@@ -37,7 +37,7 @@ rule omark_assessment:
 
         shell(
         """
-        omamer search \
+        {OMAMER_CMD} search \
          --db {params.omarkDB} \
          --query {input.transcriptPep} \
          --out {params.omarkQuery} \

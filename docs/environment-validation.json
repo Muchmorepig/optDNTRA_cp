@@ -1,27 +1,37 @@
-[
-  {
-    "environment": "core",
-    "pip_check_exit_code": 0,
-    "pip_check": "No broken requirements found."
-  },
-  {
-    "environment": "trinity",
-    "pip_check_exit_code": 0,
-    "pip_check": "No broken requirements found."
-  },
-  {
-    "environment": "busco",
-    "pip_check_exit_code": 0,
-    "pip_check": "No broken requirements found."
-  },
-  {
-    "environment": "omark",
-    "pip_check_exit_code": 0,
-    "pip_check": "No broken requirements found."
-  },
-  {
-    "environment": "eggnog",
-    "pip_check_exit_code": 0,
-    "pip_check": "No broken requirements found."
-  }
-]
+{
+  "environment": "optDNTRA-stable",
+  "python": "3.11.17 (main, Oct  7 2026, 00:02:24) [GCC 15.3.0]",
+  "checks": [
+    {
+      "name": "main_pip",
+      "exit_code": 0,
+      "output": "No broken requirements found.\n"
+    },
+    {
+      "name": "busco",
+      "exit_code": 0,
+      "output": "usage: busco -i [SEQUENCE_FILE] -l [LINEAGE] -o [OUTPUT_NAME] -m [MODE] [OTHER OPTIONS]\n\nWelcome to BUSCO 6.1.0: the Benchmarking Universal Single-Copy Ortholog assessment tool.\nFor more detailed usage information, please review the README file provided with this distribution and the BUSCO user guide. Visit this page https://gitlab.com/ezlab/busco#"
+    },
+    {
+      "name": "omark",
+      "exit_code": 0,
+      "output": "usage: omark [-h] (-f FILE | -c) -d DATABASE [-t TAXID] [-o OUTPUTFOLDER]\n             [-r TAXONOMIC_RANK] [-of OG_FASTA] [-i ISOFORM_FILE] [-v]\n\nCompute an OMA quality score from the OMAmer file of a proteome.\n\noptions:\n  -h, --help            show this help message and exit\n  -f FILE, --file FILE  Input OMAmer file - obtained as output from an OM"
+    },
+    {
+      "name": "omamer",
+      "exit_code": 0,
+      "output": "usage: omamer search [-h] -d DB -q QUERY [--threshold THRESHOLD]\n                     [--family_alpha FAMILY_ALPHA] [-fo] [-n TOP_N_FAMS]\n                     [--reference_taxon REFERENCE_TAXON] [-o OUT]\n                     [--include_extant_genes] [-c CHUNKSIZE]\n                     [-t {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,"
+    },
+    {
+      "name": "eggnog_pip",
+      "exit_code": 0,
+      "output": "No broken requirements found.\n"
+    },
+    {
+      "name": "eggnog",
+      "exit_code": 0,
+      "output": "usage: emapper.py [-h] [-v] [--list_taxa] [--cpu NUM_CPU]\n                  [--mp_start_method {fork,spawn,forkserver}] [--resume]\n                  [--override] [-i FASTA_FILE]\n                  [--itype {CDS,proteins,genome,metagenome}] [--translate]\n                  [--annotate_hits_table SEED_ORTHOLOGS_FILE] [-c FILE]\n                  [--data"
+    }
+  ],
+  "database_backed_assessments_tested": false
+}

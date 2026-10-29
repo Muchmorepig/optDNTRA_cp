@@ -33,7 +33,7 @@ omark_database:
 emapper_database:
 
 # Isolated environments: use a name, an absolute prefix, or empty for current PATH.
-trinity_env: optDNTRA-trinity
-busco_env: optDNTRA-busco
-omark_env: optDNTRA-omark
+trinity_env: ""
+busco_env: ""
+omark_env: ""
 emapper_env: optDNTRA-eggnog

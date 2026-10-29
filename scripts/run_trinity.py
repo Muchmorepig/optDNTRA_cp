@@ -11,7 +11,7 @@ def main():
     trinity = shutil.which("Trinity")
     salmon = shutil.which("salmon")
     if not trinity or not salmon:
-        sys.exit("Activate optDNTRA-trinity first; Trinity and salmon must be on PATH.")
+        sys.exit("Activate optDNTRA-stable first; Trinity and salmon must be on PATH.")
     env = os.environ.copy()
     env["OPTDNTRA_REAL_SALMON"] = str(Path(salmon).resolve())
     env["PATH"] = str(Path(__file__).resolve().parent / "compat") + os.pathsep + env["PATH"]

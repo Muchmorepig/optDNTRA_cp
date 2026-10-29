@@ -1,8 +1,0 @@
-name: optDNTRA-busco
-channels:
-  - conda-forge
-  - bioconda
-  - nodefaults
-dependencies:
-  - python=3.12
-  - busco=6.1.0

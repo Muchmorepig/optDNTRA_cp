@@ -1,10 +1,10 @@
 # Small generated tests
 
 The default test no longer requires a Trinity assembly or large checked-in FASTQs.
-From the repository root, after creating the core and Trinity environments:
+From the repository root, after creating the unified environment:
 
 ```bash
-mamba activate optDNTRA
+mamba activate optDNTRA-stable
 python -B -m unittest discover -s tests -p 'test_*.py' -v
 python -B tests/smoke.py --workdir .test-runs/core --threads 2
 ```

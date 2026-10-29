@@ -16,7 +16,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--workdir", required=True, help="New output directory")
     p.add_argument("--threads", type=int, default=2)
-    p.add_argument("--trinity-env", default="optDNTRA-trinity")
+    p.add_argument("--trinity-env", default="")
     p.add_argument("--transcripts", type=int, default=600)
     p.add_argument("--preprocess", action="store_true", help="Also test fastp and FastQC")
     p.add_argument("--single-end", action="store_true", help="Exercise single-end quantification")
